@@ -1,7 +1,7 @@
 # Desafio Técnico — FDE / AI Engineer (Namastex)
 
 Bem-vindo(a)! Este é um teste **take-home** que espelha o trabalho real de um FDE
-(Field Deployment Engineer) na Namastex: subir um **agente de verdade**, conectado a
+(Forward Deployed Engineer) na Namastex: subir um **agente de verdade**, conectado a
 sistemas que nem sempre colaboram, em cima de **dados bagunçados do mundo real**.
 
 > ⏱️ **Tempo:** ~2 dias de relógio. **Espera-se que você use AI coding tools**
