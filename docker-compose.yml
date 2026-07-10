@@ -10,3 +10,19 @@ services:
       QUOTE_SLOW_SECONDS: "8"
       # QUOTE_SEED: "42"   # descomente p/ falhas reproduziveis
     restart: unless-stopped
+
+  agent-api:
+    build: ./agent-service
+    ports:
+      - "8010:8010"
+    environment:
+      QUOTE_API_URL: "http://quote-api:8000"
+      QUOTE_TIMEOUT_SECONDS: "3"
+      QUOTE_MAX_ATTEMPTS: "3"
+      # Opcional: habilita extracao LLM para mensagens mais livres.
+      # Crie um .env local ou exporte no shell; nunca commite chave.
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-gpt-4o-mini}"
+    depends_on:
+      - quote-api
+    restart: unless-stopped

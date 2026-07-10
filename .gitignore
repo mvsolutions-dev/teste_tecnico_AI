@@ -5,10 +5,19 @@ __pycache__/
 venv/
 .uv/
 *.egg-info/
+.cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.db
+*.sqlite
+*.sqlite3
 
 # env / secrets (NUNCA commitar)
 .env
 .env.*
+!.env.example
+!**/.env.example
 *.key
 *.pem
 
@@ -17,3 +26,7 @@ venv/
 .idea/
 .vscode/
 *.log
+runtime/
+.pytest-tmp/
+.pytest_cache/
+.ruff_cache/
