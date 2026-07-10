@@ -335,6 +335,8 @@ Documentos de entrega:
 - `docs/BASELINE.md`: baseline local antes do polish 10/10.
 - `docs/FRESH_CLONE_CHECKLIST.md`: roteiro para validar em clone limpo.
 
+Para uma visão de evolução para produção, consulte `docs/PRODUCTIONIZATION_ROADMAP.md`.
+
 ### Revisão rápida para avaliador
 
 Para validar a entrega sem subir tudo manualmente:
