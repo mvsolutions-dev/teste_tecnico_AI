@@ -1,49 +1,49 @@
-# Dossie Tecnico - AutoSeguro AgentOps
+# Dossiê Técnico - AutoSeguro AgentOps
 
-Este documento resume o desafio tecnico, o que foi implementado, como a solucao
-se encaixa nos criterios de avaliacao e quais seriam os proximos passos para
-chegar o mais perto possivel de uma entrega 10/10 sem deploy em nuvem.
+Este documento resume o desafio técnico, o que foi implementado, como a solução
+se encaixa nos critérios de avaliação e quais seriam os próximos passos para
+chegar o mais perto possível de uma entrega 10/10 sem deploy em nuvem.
 
-## 1. O que e o desafio tecnico
+## 1. O que é o desafio técnico
 
 O desafio simula o trabalho de um FDE / AI Engineer em um contexto realista:
-uma seguradora ficticia, a AutoSeguro, atende leads por WhatsApp e precisa de um
-agente que qualifique o cliente, colete dados minimos, chame uma API de cotacao
+uma seguradora fictícia, a AutoSeguro, atende leads por WhatsApp e precisa de um
+agente que qualifique o cliente, colete dados mínimos, chame uma API de cotação
 e decida quando resolver sozinho ou transferir para um humano.
 
-O repo original entrega tres insumos:
+O repo original entrega três insumos:
 
 - `quote-service/`: API HTTP com `POST /quote`, `GET /health` e `GET /planos`.
 - `dataset/conversations.parquet`: cerca de 2.500 conversas lead-vendedor.
-- `dataset/DICIONARIO.md`: dicionario do dataset.
+- `dataset/DICIONARIO.md`: dicionário do dataset.
 
-O ponto mais importante do desafio nao e criar apenas um chatbot. A avaliacao
+O ponto mais importante do desafio não é criar apenas um chatbot. A avaliação
 valoriza:
 
 - funcionamento ponta a ponta;
-- comportamento quando a API de cotacao falha;
-- criterio claro para handoff humano;
-- rastreabilidade de mensagens, cotacoes e decisoes;
-- cuidado com dados sensiveis;
-- qualidade de codigo e documentacao.
+- comportamento quando a API de cotação falha;
+- critério claro para handoff humano;
+- rastreabilidade de mensagens, cotações e decisões;
+- cuidado com dados sensíveis;
+- qualidade de código e documentação.
 
-## 2. Como a solucao responde ao que o desafio pede
+## 2. Como a solução responde ao que o desafio pede
 
-| Criterio do desafio | O que foi entregue | Evidencia no repo |
+| Critério do desafio | O que foi entregue | Evidência no repo |
 | --- | --- | --- |
 | Conversar com o lead | Endpoint `POST /chat` com estado por conversa | `agent-service/app/main.py`, `agent-service/app/agent.py` |
-| Qualificar dados minimos | Extracao de idade, CEP, veiculo/ano, plano, data de inicio e PII mascarada | `agent-service/app/extraction.py`, `agent-service/app/models.py` |
-| Operar como agente LLM-first | Provider adapters opcionais para OpenAI, Azure OpenAI e OpenAI-compatible, com fallback deterministico | `agent-service/app/llm/`, `agent-service/scripts/llm_provider_smoke.py` |
+| Qualificar dados mínimos | Extração de idade, CEP, veículo/ano, plano, data de início e PII mascarada | `agent-service/app/extraction.py`, `agent-service/app/models.py` |
+| Operar como agente LLM-first | Provider adapters opcionais para OpenAI, Azure OpenAI e OpenAI-compatible, com fallback determinístico | `agent-service/app/llm/`, `agent-service/scripts/llm_provider_smoke.py` |
 | Cotar via API | `QuoteClient` chama `/quote` e classifica resposta | `agent-service/app/quote_client.py` |
-| Nao inventar preco | Preco oficial so aparece com `quote_status=success` | `agent-service/app/agent.py`, tests |
-| Lidar com legado instavel | Retry, timeout, backoff, circuit breaker, cache e estimativa preliminar | `quote_client.py`, `circuit_breaker.py`, `quote_cache.py`, `quote_estimator.py` |
-| Handoff defensavel | Motivos explicitos e `handoff_packet` estruturado | `handoff_packet.py`, `agent.py` |
+| Não inventar preço | Preço oficial só aparece com `quote_status=success` | `agent-service/app/agent.py`, tests |
+| Lidar com legado instável | Retry, timeout, backoff, circuit breaker, cache e estimativa preliminar | `quote_client.py`, `circuit_breaker.py`, `quote_cache.py`, `quote_estimator.py` |
+| Handoff defensável | Motivos explícitos e `handoff_packet` estruturado | `handoff_packet.py`, `agent.py` |
 | Rastreabilidade | `trace_id`, `X-Trace-Id`, Flight Recorder, Trace Replay HTML | `recorder.py`, `build_trace_replay.py`, `/ops/metrics` |
-| Dados sensiveis | Mascaramento de CPF, telefone, e-mail e placa + security scan | `pii.py`, `security_scan.py` |
+| Dados sensíveis | Mascaramento de CPF, telefone, e-mail e placa + security scan | `pii.py`, `security_scan.py` |
 | Uso do dataset | Profile, eval suite, acceptance suite e chaos matrix | `scripts/profile_dataset.py`, `scripts/run_eval_suite.py`, `scripts/run_acceptance_suite.py`, `scripts/run_chaos_matrix.py` |
-| Avaliacao simples pelo revisor | Smoke unico e Review Guide | `scripts/smoke_delivery.py`, `docs/REVIEW_GUIDE.md` |
+| Avaliação simples pelo revisor | Smoke único e Review Guide | `scripts/smoke_delivery.py`, `docs/REVIEW_GUIDE.md` |
 
-## 3. Arquitetura em alto nivel
+## 3. Arquitetura em alto nível
 
 ```text
 Lead / avaliador
@@ -52,11 +52,11 @@ Lead / avaliador
 FastAPI agent-service
   |
   +-- Agent state por conversation_id
-  +-- LeadExtractor deterministico + LLM provider opcional
+  +-- LeadExtractor determinístico + LLM provider opcional
   +-- QuoteClient resiliente
   |     +-- retry/backoff
   |     +-- circuit breaker
-  |     +-- cache sem PII desnecessaria
+  |     +-- cache sem PII desnecessária
   |     +-- estimativa preliminar se legado cair
   |
   +-- FlightRecorder JSONL com PII redigida
@@ -73,7 +73,7 @@ quote-service
 Fluxo recomendado para um avaliador clonar e testar localmente:
 
 ```bash
-git clone <repo-publico>
+git clone <repo-público>
 cd namastex-fde-challenge/agent-service
 python -m pip install -e ".[dev]"
 python scripts/smoke_delivery.py --full
@@ -110,14 +110,14 @@ python -m pip install -e ".[dev]"
 uvicorn app.main:app --port 8010
 ```
 
-Teste rapido:
+Teste rápido:
 
 ```bash
 curl -X POST localhost:8010/chat \
   -H "content-type: application/json" \
   -d '{
     "conversation_id": "demo-001",
-    "message": "Sou Ana, tenho 35 anos, CEP 01310-100. Meu carro e um Corolla 2022 e quero completo com inicio em 2026-07-15."
+    "message": "Sou Ana, tenho 35 anos, CEP 01310-100. Meu carro e um Corolla 2022 e quero completo com início em 2026-07-15."
   }'
 ```
 
@@ -129,7 +129,7 @@ curl localhost:8010/ops/metrics
 
 ## 5. Variaveis de ambiente para o avaliador
 
-O sistema funciona sem chave de LLM usando extracao deterministica. Se o avaliador
+O sistema funciona sem chave de LLM usando extração determinística. Se o avaliador
 quiser testar o complemento por LLM, basta preencher `.env` em `agent-service/`
 usando `.env.example` como base.
 
@@ -172,28 +172,28 @@ python scripts/llm_provider_smoke.py --provider fake
 python scripts/llm_provider_smoke.py --provider azure_openai
 ```
 
-Sem envs reais, providers externos ficam `SKIPPED` e nao quebram o smoke principal.
+Sem envs reais, providers externos ficam `SKIPPED` e não quebram o smoke principal.
 
-## 6. Trechos de codigo relevantes
+## 6. Trechos de código relevantes
 
 ### 6.1 Handoff terminal
 
-O agente nao reabre fluxo de cotacao depois que decidiu passar para humano:
+O agente não reabre fluxo de cotação depois que decidiu passar para humano:
 
 ```python
 if state.status == AgentStatus.HANDOFF:
     reply = (
-        "Seu atendimento ja esta encaminhado para um especialista humano. "
-        "Vou manter esta nova mensagem no contexto para ele continuar sem perda de historico."
+        "Seu atendimento já está encaminhado para um especialista humano. "
+        "Vou manter está nova mensagem no contexto para ele continuar sem perda de histórico."
     )
     return self._respond(state, reply)
 ```
 
 Arquivo: `agent-service/app/agent.py`
 
-### 6.2 Nao inventar preco
+### 6.2 Não inventar preço
 
-O fluxo so gera resposta com preco quando `quote_result.status == "success"`:
+O fluxo só gera resposta com preço quando `quote_result.status == "success"`:
 
 ```python
 quote_result = await self.quote_client.quote(state.lead.quote_payload())
@@ -205,21 +205,21 @@ if quote_result.status == "success":
 elif quote_result.status == "estimated":
     reply = self._handoff(
         state,
-        "legado indisponivel; estimativa preliminar gerada para validacao humana",
+        "legado indisponível; estimativa preliminar gerada para validação humana",
     )
 elif quote_result.status == "refused":
-    reply = self._handoff(state, f"cotacao recusada: {quote_result.reason}")
+    reply = self._handoff(state, f"cotação recusada: {quote_result.reason}")
 elif quote_result.status == "invalid":
-    reply = self._handoff(state, f"payload invalido para cotacao: {quote_result.reason}")
+    reply = self._handoff(state, f"payload inválido para cotação: {quote_result.reason}")
 else:
-    reply = self._handoff(state, "sistema legado de cotacao indisponivel apos retries")
+    reply = self._handoff(state, "sistema legado de cotação indisponível após retries")
 ```
 
 Arquivo: `agent-service/app/agent.py`
 
 ### 6.3 Cliente resiliente do legado
 
-Retry, classificacao de erro, cache e contingencia ficam encapsulados no cliente:
+Retry, classificação de erro, cache e contingência ficam encapsulados no cliente:
 
 ```python
 async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
@@ -235,14 +235,14 @@ async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
         except httpx.TimeoutException:
             attempts.append(QuoteAttempt(..., status="timeout", ...))
 
-return self._contingency_result(payload, "Servico de cotacao indisponivel apos tentativas com retry.", attempts)
+return self._contingency_result(payload, "Serviço de cotação indisponível após tentativas com retry.", attempts)
 ```
 
 Arquivo: `agent-service/app/quote_client.py`
 
-### 6.4 Cache sem PII desnecessaria
+### 6.4 Cache sem PII desnecessária
 
-O cache nao usa nome, CPF, telefone nem CEP completo:
+O cache não usa nome, CPF, telefone nem CEP completo:
 
 ```python
 safe_payload = {
@@ -259,7 +259,7 @@ Arquivo: `agent-service/app/quote_cache.py`
 
 ### 6.5 PII masking
 
-O scanner falha se encontrar PII crua em logs/relatorios gerados:
+O scanner falha se encontrar PII crua em logs/relatórios gerados:
 
 ```python
 FAIL_PATTERNS = {
@@ -279,7 +279,7 @@ return {
 
 Arquivo: `agent-service/scripts/security_scan.py`
 
-### 6.6 Smoke unico de entrega
+### 6.6 Smoke único de entrega
 
 O avaliador roda um comando e recebe os principais gates:
 
@@ -306,12 +306,12 @@ Os exemplos abaixo sairam de:
 runtime/reports/delivery_smoke/demo_walkthrough/demo_walkthrough.json
 ```
 
-### 7.1 Caminho feliz: cotacao oficial
+### 7.1 Caminho feliz: cotação oficial
 
 Lead:
 
 ```text
-Oi, sou a Ana. Tenho 35 anos, CPF ***.083.863-**, CEP 01310-100. Meu carro e um Corolla 2022 e quero o plano completo com inicio em 2026-07-15.
+Oi, sou a Ana. Tenho 35 anos, CPF ***.083.863-**, CEP 01310-100. Meu carro e um Corolla 2022 e quero o plano completo com início em 2026-07-15.
 ```
 
 Agente:
@@ -327,7 +327,7 @@ status=quoted
 quote_status=success
 ```
 
-### 7.2 Legado indisponivel: retry e handoff seguro
+### 7.2 Legado indisponível: retry e handoff seguro
 
 Lead:
 
@@ -338,7 +338,7 @@ Tenho 41 anos, CEP 01310-100, carro T-Cross 2021, quero plano premium.
 Agente:
 
 ```text
-Vou encaminhar para um especialista humano com o contexto que ja coletei. Motivo: sistema legado de cotacao indisponivel apos retries. Assim evitamos travar seu atendimento ou passar uma cotacao insegura.
+Vou encaminhar para um especialista humano com o contexto que já coletei. Motivo: sistema legado de cotação indisponível após retries. Assim evitamos travar seu atendimento ou passar uma cotação insegura.
 ```
 
 Resultado:
@@ -346,7 +346,7 @@ Resultado:
 ```text
 status=handoff
 quote_status=unavailable
-handoff_reason=sistema legado de cotacao indisponivel apos retries
+handoff_reason=sistema legado de cotação indisponível após retries
 ```
 
 Trecho do pacote de handoff:
@@ -369,11 +369,11 @@ Trecho do pacote de handoff:
       {"attempt": 2, "status": "retryable_error", "http_status": 503}
     ]
   },
-  "next_best_action": "Validar a estimativa/reprocessar cotacao quando o legado estabilizar e avisar o lead."
+  "next_best_action": "Validar a estimativa/reprocessar cotação quando o legado estabilizar e avisar o lead."
 }
 ```
 
-### 7.3 Midia sem transcricao: passa para humano
+### 7.3 Mídia sem transcrição: passa para humano
 
 Lead:
 
@@ -384,17 +384,17 @@ Lead:
 Agente:
 
 ```text
-Vou encaminhar para um especialista humano com o contexto que ja coletei. Motivo: lead enviou midia sem conteudo textual suficiente. Assim evitamos travar seu atendimento ou passar uma cotacao insegura.
+Vou encaminhar para um especialista humano com o contexto que já coletei. Motivo: lead enviou mídia sem conteúdo textual suficiente. Assim evitamos travar seu atendimento ou passar uma cotação insegura.
 ```
 
 Resultado:
 
 ```text
 status=handoff
-handoff_reason=lead enviou midia sem conteudo textual suficiente
+handoff_reason=lead enviou mídia sem conteúdo textual suficiente
 ```
 
-### 7.4 Objecao comercial apos cotacao
+### 7.4 Objeção comercial após cotação
 
 Lead:
 
@@ -417,7 +417,7 @@ Achei caro, o concorrente me ofereceu menos.
 Agente:
 
 ```text
-Vou encaminhar para um especialista humano com o contexto que ja coletei. Motivo: lead trouxe negociacao ou objecao comercial apos cotacao. Assim evitamos travar seu atendimento ou passar uma cotacao insegura.
+Vou encaminhar para um especialista humano com o contexto que já coletei. Motivo: lead trouxe negociação ou objeção comercial após cotação. Assim evitamos travar seu atendimento ou passar uma cotação insegura.
 ```
 
 Resultado:
@@ -425,10 +425,10 @@ Resultado:
 ```text
 status=handoff
 quote_status=success
-handoff_reason=lead trouxe negociacao ou objecao comercial apos cotacao
+handoff_reason=lead trouxe negociação ou objeção comercial após cotação
 ```
 
-## 8. Evidencias de validacao atual
+## 8. Evidências de validação atual
 
 Ultima rodada local:
 
@@ -444,42 +444,42 @@ security_gate: PASS
 eval_conversations: 2500
 ```
 
-O warning atual vem de `fastapi.testclient` / Starlette sobre `httpx`; nao e falha
+O warning atual vem de `fastapi.testclient` / Starlette sobre `httpx`; não é falha
 funcional do projeto.
 
-## 9. Como os relatorios ajudam a banca
+## 9. Como os relatórios ajudam a banca
 
-| Relatorio | Pergunta que responde |
+| Relatório | Pergunta que responde |
 | --- | --- |
-| `control_tower.html` | "Qual e o status executivo da entrega?" |
-| `trace_replay.html` | "Da para rastrear uma conversa real por turno?" |
+| `control_tower.html` | "Qual é o status executivo da entrega?" |
+| `trace_replay.html` | "Dá para rastrear uma conversa real por turno?" |
 | `eval_suite_report.html` | "O agente segura o dataset completo?" |
-| `acceptance_report.html` | "Os cenarios de negocio essenciais passam?" |
+| `acceptance_report.html` | "Os cenários de negócio essenciais passam?" |
 | `chaos_matrix_report.html` | "O que acontece quando a API falha muito?" |
 | `demo_walkthrough.html` | "Como eu demonstro isso em 3 minutos?" |
-| `security_scan_report.html` | "Ha PII crua vazando em logs/relatorios?" |
-| `http_e2e_report.html` | "A integracao HTTP real entre agent e quote API funciona localmente?" |
+| `security_scan_report.html` | "Há PII crua vazando em logs/relatórios?" |
+| `http_e2e_report.html` | "A integração HTTP real entre agent e quote API funciona localmente?" |
 
-## 10. Proximos passos para aproximar de 10/10 sem deploy
+## 10. Próximos passos para apróximar de 10/10 sem deploy
 
-Nao vamos fazer deploy em Azure. Considerando que a entrega sera um repo publico
+Não vamos fazer deploy em Azure. Considerando que a entrega será um repo publico
 para o avaliador clonar e preencher envs, os pontos de maior impacto ficaram assim:
 
 ### Fechado nesta versao
 
 1. **README reviewer-first**
-   - O README abre com o fast path de 10 minutos, artefatos a abrir e decisoes
+   - O README abre com o fast path de 10 minutos, artefatos a abrir e decisões
      centrais.
 
 2. **E2E HTTP local opcional**
    - `agent-service/scripts/http_e2e_smoke.py` valida `quote-service` e
      `agent-service` via HTTP real, com `X-Trace-Id` e report JSON/HTML.
 
-3. **Persistencia SQLite opcional**
+3. **Persistência SQLite opcional**
    - `AUTOSEGURO_STATE_STORE=sqlite` ativa `SQLiteConversationStore`.
-   - O payload persistido usa mensagens redigidas, nao texto bruto com PII.
+   - O payload persistido usa mensagens redigidas, não texto bruto com PII.
 
-4. **Normalizacao de veiculo**
+4. **Normalização de veículo**
    - `veiculo_texto` agora tende a sair como `Toyota Corolla 2022`,
      `Volkswagen T-Cross 2021`, `Honda Civic 2020`, etc.
    - `veiculo_marca` e `veiculo_modelo` foram adicionados mantendo compatibilidade
@@ -492,7 +492,7 @@ para o avaliador clonar e preencher envs, os pontos de maior impacto ficaram ass
    python scripts/smoke_delivery.py --limit 250 --include-llm-judge
    ```
 
-   Sem envs, o report fica `skipped` e nao quebra o gate principal.
+   Sem envs, o report fica `skipped` e não quebra o gate principal.
 
 6. **Makefile e PowerShell runner**
    - `make smoke`, `make test`, `make lint`.
@@ -509,32 +509,32 @@ para o avaliador clonar e preencher envs, os pontos de maior impacto ficaram ass
    python scripts/smoke_delivery.py --full
    ```
 
-   Isso simula a banca e pega dependencia faltando.
+   Isso simula a banca e pega dependência faltando.
 
 2. **Gravar GIF ou screenshots dos HTMLs**
    - Sem deploy, uma evidencia visual no README pode aumentar muito a percepcao.
    - Pode ser uma imagem do `control_tower.html` e do `demo_walkthrough.html`.
 
-3. **Persistencia multiusuario real**
+3. **Persistência multiusuario real**
    - SQLite e suficiente para o take-home local.
-   - Em producao, a evolucao natural seria Postgres/Redis com isolamento de tenant.
+   - Em produção, a evolucao natural seria Postgres/Redis com isolamento de tenant.
 
 11. **Arquitetura em diagrama Mermaid**
    - Incluir no README ou `ARCHITECTURE.md`.
-   - Ajuda leitura rapida por CTO/tech lead.
+   - Ajuda leitura rápida por CTO/tech lead.
 
 ## 11. Veredito atual
 
-A entrega atual esta acima do minimo do desafio. Ela nao e apenas um chatbot;
+A entrega atual está acima do mínimo do desafio. Ela não é apenas um chatbot;
 ela funciona como uma camada de AgentOps para atendimento comercial com legado
-instavel:
+instável:
 
 - agente conversacional;
-- cotacao real;
-- resiliencia operacional;
+- cotação real;
+- resiliência operacional;
 - handoff seguro;
 - PII masking;
-- avaliacao em massa;
+- avaliação em massa;
 - chaos testing;
 - acceptance testing;
 - demo visual;
@@ -543,5 +543,5 @@ instavel:
 - security scan.
 
 Sem deploy, o caminho para uma nota maxima e garantir que o revisor consiga
-clonar, preencher envs opcionais, rodar um comando e enxergar evidencias
+clonar, preencher envs opcionais, rodar um comando e enxergar evidências
 objetivas em poucos minutos.

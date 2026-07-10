@@ -6,11 +6,11 @@ from .models import ConversationState
 
 
 def build_handoff_packet(state: ConversationState) -> dict[str, Any]:
-    """Monta um pacote acionavel para o humano continuar o atendimento.
+    """Monta um pacote acionável para o humano continuar o atendimento.
 
-    O objetivo e transformar o estado tecnico do agente em um artefato de
-    operacao comercial: o corretor sabe o que ocorreu, quais dados ja existem,
-    qual foi a decisao e qual e a proxima melhor acao.
+    O objetivo é transformar o estado técnico do agente em um artefato de
+    operação comercial: o corretor sabe o que ocorreu, quais dados já existem,
+    qual foi a decisão e qual é a próxima melhor ação.
     """
     lead = state.lead
     quote_result = state.quote_result
@@ -63,17 +63,17 @@ def build_handoff_packet(state: ConversationState) -> dict[str, Any]:
 def _next_best_action(state: ConversationState) -> str:
     reason = (state.handoff_reason or "").casefold()
     if "indisponivel" in reason or "legado" in reason:
-        return "Validar a estimativa/reprocessar cotacao quando o legado estabilizar e avisar o lead."
+        return "Validar a estimativa/reprocessar cotação quando o legado estabilizar e avisar o lead."
     if "recusada" in reason:
-        return "Explicar criterio de recusa e avaliar alternativa comercial permitida."
+        return "Explicar critério de recusa e avaliar alternativa comercial permitida."
     if "objecao" in reason or "negociacao" in reason:
-        return "Tratar objecao comercial, comparar franquia/coberturas e tentar retenção."
+        return "Tratar objeção comercial, comparar franquia/coberturas e tentar retenção."
     if "aceitou" in reason or "emissao" in reason:
-        return "Assumir emissao da proposta, confirmar dados finais e gerar proximo passo comercial."
+        return "Assumir emissão da proposta, confirmar dados finais e gerar próximo passo comercial."
     if "recusou" in reason:
-        return "Registrar perda ou acionar retencao com proposta alternativa permitida."
+        return "Registrar perda ou acionar retenção com proposta alternativa permitida."
     if "midia" in reason:
-        return "Solicitar transcricao/resumo do anexo ou analisar manualmente a midia recebida."
+        return "Solicitar transcrição/resumo do anexo ou analisar manualmente a mídia recebida."
     if "humano" in reason:
         return "Assumir conversa diretamente, mantendo contexto coletado."
     return "Revisar contexto e continuar atendimento pelo canal humano."
@@ -87,9 +87,9 @@ def _summary(state: ConversationState) -> str:
     if lead.idade:
         parts.append(f"{lead.idade} anos")
     if lead.veiculo_texto:
-        parts.append(f"veiculo {lead.veiculo_texto}")
+        parts.append(f"veículo {lead.veiculo_texto}")
     elif lead.veiculo_ano:
-        parts.append(f"veiculo ano {lead.veiculo_ano}")
+        parts.append(f"veículo ano {lead.veiculo_ano}")
     if lead.cep:
         parts.append(f"CEP {lead.cep}")
     if lead.plano_id:
@@ -98,15 +98,15 @@ def _summary(state: ConversationState) -> str:
     if state.quote_result and state.quote_result.status == "success":
         quote = state.quote_result.quote or {}
         return (
-            f"{base}. Cotacao calculada: {quote.get('plano_nome')} por "
-            f"R$ {quote.get('premio_mensal')}/mes."
+            f"{base}. Cotação calculada: {quote.get('plano_nome')} por "
+            f"R$ {quote.get('premio_mensal')}/mês."
         )
     if state.quote_result and state.quote_result.status == "estimated":
         quote = state.quote_result.quote or {}
         faixa = quote.get("premio_mensal_faixa") or {}
         return (
             f"{base}. Estimativa preliminar: {quote.get('plano_nome')} entre "
-            f"R$ {faixa.get('min')} e R$ {faixa.get('max')}/mes, pendente de validacao humana."
+            f"R$ {faixa.get('min')} e R$ {faixa.get('max')}/mês, pendente de validação humana."
         )
     if state.handoff_reason:
         return f"{base}. Encaminhado para humano: {state.handoff_reason}."

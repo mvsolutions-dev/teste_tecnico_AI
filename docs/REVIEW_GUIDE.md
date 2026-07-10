@@ -1,19 +1,19 @@
 # AutoSeguro AgentOps - Review Guide
 
-Este guia existe para uma avaliacao tecnica rapida. A ideia e permitir que outro
-engenheiro verifique funcionamento, resiliencia e rastreabilidade sem precisar
-ler o repositorio inteiro primeiro.
+Este guia existe para uma avaliação técnica rápida. A ideia é permitir que outro
+engenheiro verifique funcionamento, resiliência e rastreabilidade sem precisar
+ler o repositório inteiro primeiro.
 
 ## Revisao em 10 minutos
 
-1. Instale as dependencias do agente:
+1. Instale as dependências do agente:
 
    ```bash
    cd agent-service
    python -m pip install -e ".[dev]"
    ```
 
-2. Rode o smoke deterministico:
+2. Rode o smoke determinístico:
 
    ```bash
    python scripts/smoke_delivery.py --limit 250
@@ -43,35 +43,35 @@ ler o repositorio inteiro primeiro.
    - `eval_suite_report.json` deve ter `gate=PASS`;
    - `terminal_handoff_violations` deve ser `0`.
 
-## O que olhar no codigo
+## O que olhar no código
 
-- `agent-service/app/agent.py`: estado conversacional, decisoes de handoff e chamada de cotacao.
+- `agent-service/app/agent.py`: estado conversacional, decisões de handoff e chamada de cotação.
 - `agent-service/app/llm/`: provider adapters e contrato estruturado LLM-first.
 - `agent-service/app/quote_client.py`: retry, timeout, circuit breaker, cache e estimativa.
-- `agent-service/app/pii.py`: redacao de CPF, telefone, email e placa.
+- `agent-service/app/pii.py`: redação de CPF, telefone, email e placa.
 - `agent-service/app/handoff_packet.py`: pacote operacional para o corretor humano.
 - `agent-service/app/main.py`: endpoints publicos, `X-Trace-Id` e `/ops/metrics`.
-- `agent-service/scripts/run_eval_suite.py`: avaliacao em massa no dataset completo.
-- `agent-service/scripts/run_acceptance_suite.py`: cenarios de aceite do produto.
-- `agent-service/scripts/run_chaos_matrix.py`: matriz de resiliencia contra legado instavel.
+- `agent-service/scripts/run_eval_suite.py`: avaliação em massa no dataset completo.
+- `agent-service/scripts/run_acceptance_suite.py`: cenários de aceite do produto.
+- `agent-service/scripts/run_chaos_matrix.py`: matriz de resiliência contra legado instável.
 - `agent-service/scripts/build_trace_replay.py`: replay visual de uma conversa com estado por turno.
-- `agent-service/scripts/demo_walkthrough.py`: demonstracao narrativa para banca.
-- `agent-service/scripts/security_scan.py`: gate local contra PII crua em logs/relatorios.
+- `agent-service/scripts/demo_walkthrough.py`: demonstração narrativa para banca.
+- `agent-service/scripts/security_scan.py`: gate local contra PII crua em logs/relatórios.
 
 ## Diferenciais intencionais
 
-- O agente nao inventa preco. Cotacao oficial so sai apos resposta do legado.
-- Quando o legado falha, existe retry, cache stale-if-error e estimativa preliminar marcada para validacao humana.
-- Handoff e terminal: depois de encaminhar para humano, o bot nao reabre cotacao automaticamente.
-- Logs e replays persistem conteudo redigido, nao PII bruta.
-- O dataset nao e apenas insumo de prompt: ele vira suite de avaliacao e relatorio operacional.
+- O agente não inventa preço. Cotação oficial só sai após resposta do legado.
+- Quando o legado falha, existe retry, cache stale-if-error e estimativa preliminar marcada para validação humana.
+- Handoff é terminal: depois de encaminhar para humano, o bot não reabre cotação automaticamente.
+- Logs e replays persistem conteúdo redigido, não PII bruta.
+- O dataset não é apenas insumo textual: ele vira suíte de avaliação e relatório operacional.
 
 ## Modo com LLM
 
 O fluxo principal roda sem chave de LLM. Se uma chave estiver configurada, o extrator
 usa provider adapters para interpretar mensagens livres, extrair slots, identificar
-intencao/objecoes e sugerir uma resposta consultiva. As decisoes criticas continuam
-protegidas por codigo deterministico.
+intenção/objeções e sugerir uma resposta consultiva. As decisões criticas continuam
+protegidas por código determinístico.
 
 Variaveis aceitas:
 
@@ -87,7 +87,7 @@ Variaveis aceitas:
 - `OPENAI_COMPATIBLE_BASE_URL`
 - `OPENAI_COMPATIBLE_MODEL`
 
-Nao commitar `.env`.
+Não commitar `.env`.
 
 Smoke de provider:
 
@@ -109,7 +109,7 @@ gate principal verde.
 
 ## Smoke HTTP opcional
 
-Para validar integracao real entre agent e quote API:
+Para validar integração real entre agent e quote API:
 
 ```bash
 python scripts/http_e2e_smoke.py --start-services
@@ -120,9 +120,9 @@ O report sai em:
 - `runtime/reports/http_e2e/http_e2e_report.json`
 - `runtime/reports/http_e2e/http_e2e_report.html`
 
-## Persistencia local opcional
+## Persistência local opcional
 
-O default e memoria. Para testar persistencia local redigida:
+O default é memória. Para testar persistência local redigida:
 
 ```bash
 AUTOSEGURO_STATE_STORE=sqlite AUTOSEGURO_SQLITE_PATH=runtime/state/autoseguro.db uvicorn app.main:app --port 8010

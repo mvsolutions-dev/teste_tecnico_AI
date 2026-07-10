@@ -1,61 +1,72 @@
-# AutoSeguro AgentOps — Technical Review Summary
+# AutoSeguro AgentOps — Resumo Técnico de Revisão
 
-## Executive Summary
+## Resumo Executivo
 
-AutoSeguro AgentOps is a local, reviewer-friendly agent layer for the AutoSeguro take-home challenge. It qualifies insurance leads, calls the legacy `/quote` service, handles legacy instability safely and produces auditable evidence through tests, dataset evaluation, chaos testing and security scans.
+AutoSeguro AgentOps é uma camada local de agente para o desafio de seguro auto. A
+solução qualifica leads, chama o serviço legado `/quote`, lida com instabilidade do
+legado de forma segura e produz evidências auditáveis por meio de testes, avaliação
+com dataset, chaos testing e security scan.
 
-Current technical status: **PASS**.
+Status técnico atual: **PASS**.
 
-## Architecture Thesis
+## Tese de Arquitetura
 
-The agent is designed as **LLM-first when configured** and **deterministic-safe when not configured**.
+O agente foi desenhado como **LLM-first quando configurado** e
+**deterministic-safe quando não configurado**.
 
-- With an LLM provider, the agent interprets free-form messages, extracts structured slots, classifies intent, identifies commercial signals and can use a safer premium-style reply draft.
-- Without an LLM provider, the deterministic flow remains fully runnable by any evaluator without API keys.
-- In both modes, critical business decisions remain deterministic: official price only after quote success, estimates require human validation, handoff is terminal and PII is redacted.
+- Com provider LLM, o agente interpreta mensagens livres, extrai slots estruturados,
+  classifica intenção, identifica sinais comerciais e pode sugerir um rascunho de
+  resposta mais consultivo.
+- Sem provider LLM, o fluxo determinístico continua executável por qualquer avaliador
+  sem chaves externas.
+- Nos dois modos, decisões críticas continuam determinísticas: preço oficial só após
+  cotação com sucesso, estimativas exigem validação humana, handoff é terminal e PII é
+  redigida.
 
-## LLM Providers
+## Providers LLM
 
-Implemented providers:
+Providers implementados:
 
-- `disabled`: default safe provider, no network calls.
-- `fake`: deterministic provider for tests and local smoke.
-- `openai`: OpenAI direct through environment configuration.
-- `azure_openai`: Azure OpenAI through environment configuration.
-- `openai_compatible`: compatible endpoint support for Foundry-style deployments.
+- `disabled`: provider seguro default, sem chamadas de rede.
+- `fake`: provider determinístico para testes e smoke local.
+- `openai`: OpenAI direto via configuração de ambiente.
+- `azure_openai`: Azure OpenAI via configuração de ambiente.
+- `openai_compatible`: suporte a endpoint compatível com OpenAI/Foundry.
 
-Selection is controlled by `AUTOSEGURO_LLM_PROVIDER`.
+A seleção é controlada por `AUTOSEGURO_LLM_PROVIDER`.
 
-## Critical Guardrails
+## Guardrails Críticos
 
-The system prevents:
+O sistema evita:
 
-- official prices without `quote_status=success`;
-- treating estimates as official quotes;
-- LLM-generated replies with invented prices;
-- automatic reopening after handoff;
-- raw CPF, phone, email or plate leakage in generated logs/reports;
-- LLM failures breaking the main deterministic path;
-- legacy failures turning into fake quotes.
+- preço oficial sem `quote_status=success`;
+- estimativa tratada como cotação oficial;
+- resposta gerada por LLM com preço inventado;
+- reabertura automática depois de handoff;
+- vazamento de CPF, telefone, e-mail ou placa em logs/reports gerados;
+- falha de LLM quebrando o caminho determinístico principal;
+- falha do legado virando cotação falsa.
 
-## Dataset Usage
+## Uso do Dataset
 
-The historical conversation dataset is used as engineering evidence, not as raw few-shot prompt memory.
+O dataset histórico de conversas é usado como evidência de engenharia, não como
+memória textual bruta.
 
-It powers:
+Ele alimenta:
 
-- dataset profiling;
-- replay/evaluation over historical conversations;
-- acceptance scenarios;
-- chaos testing against unstable legacy behavior;
-- trace replay with redacted state;
-- security checks for generated artifacts.
+- profiling do dataset;
+- replay e avaliação sobre conversas históricas;
+- cenários de aceite;
+- chaos testing contra comportamento instável do legado;
+- trace replay com estado redigido;
+- security checks para artefatos gerados.
 
-This avoids overfitting prompts to raw examples and reduces leakage risk.
+Essa abordagem reduz o risco de vazamento e evita ajustar o comportamento a exemplos
+brutos sem rastreabilidade.
 
-## Validation Snapshot
+## Snapshot de Validação
 
-Recent gates:
+Gates recentes:
 
 | Gate | Status |
 | --- | --- |
@@ -65,13 +76,13 @@ Recent gates:
 | smoke delivery full | PASS |
 | HTTP E2E smoke | PASS |
 | LLM provider fake | PASS |
-| OpenAI provider smoke | PASS when env is configured |
-| Azure OpenAI provider smoke | PASS when env is configured |
-| OpenAI-compatible provider smoke | SKIPPED when env is absent |
+| OpenAI provider smoke | PASS quando env está configurado |
+| Azure OpenAI provider smoke | PASS quando env está configurado |
+| OpenAI-compatible provider smoke | SKIPPED quando env está ausente |
 
-## Review Path
+## Caminho de Revisão
 
-Recommended reviewer flow:
+Fluxo recomendado para avaliadores:
 
 ```bash
 cd agent-service
@@ -79,7 +90,7 @@ python -m pip install -e ".[dev]"
 python scripts/smoke_delivery.py --limit 250
 ```
 
-Optional:
+Opcional:
 
 ```bash
 python scripts/smoke_delivery.py --full
@@ -87,7 +98,8 @@ python scripts/http_e2e_smoke.py --start-services
 python scripts/llm_provider_smoke.py --provider fake
 ```
 
-Provider-specific checks can be run after filling local environment variables:
+Checks por provider podem ser executados depois de preencher variáveis de ambiente
+locais:
 
 ```bash
 python scripts/llm_provider_smoke.py --provider openai
@@ -95,11 +107,11 @@ python scripts/llm_provider_smoke.py --provider azure_openai
 python scripts/llm_provider_smoke.py --provider openai_compatible
 ```
 
-No real keys are required for the default smoke.
+Nenhuma chave real é necessária para o smoke default.
 
-## Commit Readiness
+## Prontidão Para Commit
 
-The intended commit should include:
+O commit de entrega deve incluir:
 
 - `README.md`
 - `.gitignore`
@@ -107,5 +119,8 @@ The intended commit should include:
 - `.github/`
 - `agent-service/`
 - `docs/`
+- `AGENTS.md`
 
-Generated runtime reports, local databases, caches and local `.env` files should remain outside the commit.
+Relatórios gerados em runtime, bancos locais, caches e arquivos `.env` locais devem
+ficar fora do commit.
+

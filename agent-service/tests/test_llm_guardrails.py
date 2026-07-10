@@ -55,4 +55,4 @@ async def test_llm_draft_with_invented_price_is_blocked(tmp_path) -> None:
 
     assert response.status == "collecting"
     assert "R$" not in response.reply
-    assert "Qual e o modelo e ano" in response.reply
+    assert "Qual é o modelo e ano" in response.reply

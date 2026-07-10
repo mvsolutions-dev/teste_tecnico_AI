@@ -4,17 +4,17 @@ Data: 2026-07-09
 
 ## Hipotese inicial
 
-A primeira versao funcionava, mas ainda parecia uma solucao de endpoint. Para
+A primeira versao funcionava, mas ainda parecia uma solução de endpoint. Para
 subir a regua FDE/AI Engineer, o agente precisava usar melhor o dataset, deixar
-as decisoes auditaveis e provar comportamento sob instabilidade.
+as decisões auditaveis e provar comportamento sob instabilidade.
 
 ## Ajustes executados
 
 1. **Azure OpenAI**
    - O extrator agora usa Azure OpenAI quando `AZURE_OPENAI_API_KEY` e
      `AZURE_OPENAI_ENDPOINT` existem.
-   - `AZURE_DEPLOYMENT_MINI` tem prioridade como modelo de extracao.
-   - Se o LLM falhar, o fluxo cai para extracao deterministica e registra
+   - `AZURE_DEPLOYMENT_MINI` tem prioridade como modelo de extração.
+   - Se o LLM falhar, o fluxo cai para extração determinística e registra
      `llm_error_type`.
 
 2. **Metadados do WhatsApp/dataset**
@@ -28,22 +28,22 @@ as decisoes auditaveis e provar comportamento sob instabilidade.
    - Teste garante `26.470` mensagens e `2.500` conversas.
 
 4. **Handoff terminal**
-   - Achado na arena instavel: apos handoff por indisponibilidade, mensagens
-     futuras podiam reabrir cotacao.
-   - Corrigido: handoff agora e terminal e mensagens seguintes sao anexadas ao
+   - Achado na arena instável: após handoff por indisponibilidade, mensagens
+     futuras podiam reabrir cotação.
+   - Corrigido: handoff agora é terminal e mensagens seguintes são anexadas ao
      contexto para o humano.
 
-5. **Parsing de veiculo**
-   - Corrigido parser para nao carregar intencao de plano dentro de `veiculo_texto`.
+5. **Parsing de veículo**
+   - Corrigido parser para não carregar intenção de plano dentro de `veiculo_texto`.
    - Exemplo: `Honda Civic de 2021 e queria o premium` vira `Honda Civic de 2021`.
 
-## Validacoes
+## Validações
 
 ### Testes e lint
 
 - `python -m pytest -q --basetemp .pytest-tmp`: `15 passed`
-- apos ajustes finais: `13+` evoluiu para `15 passed`
-- `python -m ruff check .`: sem violacoes
+- após ajustes finais: `13+` evoluiu para `15 passed`
+- `python -m ruff check .`: sem violações
 
 ### Smoke Azure
 
@@ -82,7 +82,7 @@ Comando: `replay_arena.py --limit 100` com `/quote` estavel.
   - `veiculo_ano=100%`
   - `plano_id=100%`
 
-### Arena instavel calibrada
+### Arena instável calibrada
 
 Comando: `replay_arena.py --limit 50` com `QUOTE_FAILURE_RATE=0.45`,
 `QUOTE_SEED=7`.
@@ -97,20 +97,20 @@ Comando: `replay_arena.py --limit 50` com `QUOTE_FAILURE_RATE=0.45`,
 
 ## Resultado
 
-O agente passou de um fluxo simples de extracao/cotacao para uma entrega com:
+O agente passou de um fluxo simples de extração/cotação para uma entrega com:
 
 - uso concreto do dataset;
 - evals reprodutiveis;
-- fallback LLM auditavel;
+- fallback LLM auditável;
 - handoff terminal;
 - metadados do canal usados corretamente;
 - logs e estado redigidos.
 
-## Proximos incrementos recomendados
+## Próximos incrementos recomendados
 
-- UI simples de trace/replay para demonstracao.
-- LLM-as-a-judge em amostras selecionadas para avaliar tom e qualidade de decisao.
-- Persistencia de estado em Redis/Postgres.
+- UI simples de trace/replay para demonstração.
+- LLM-as-a-judge em amostras selecionadas para avaliar tom e qualidade de decisão.
+- Persistência de estado em Redis/Postgres.
 
 ## Rodada adicional de 24h
 
@@ -118,24 +118,24 @@ Incremento implementado: `agent-service/scripts/run_eval_suite.py`.
 
 O que mudou:
 
-- avaliacao in-process usando a mesma logica de negocio do `quote-service`;
-- cenario estavel com 2.500 conversas;
-- cenario instavel com falha/timeout simulados;
+- avaliação in-process usando a mesma lógica de negócio do `quote-service`;
+- cenário estavel com 2.500 conversas;
+- cenário instável com falha/timeout simulados;
 - gate automatico para:
-  - violacao de handoff terminal;
-  - vazamento de PII nao mascarada em trace persistido;
-- relatorio JSON e HTML.
+  - violação de handoff terminal;
+  - vazamento de PII não mascarada em trace persistido;
+- relatório JSON e HTML.
 
 Resultado:
 
 - gate: `PASS`;
 - 2.500 conversas em `2,288s`;
-- `0` violacoes de handoff terminal;
+- `0` violações de handoff terminal;
 - cobertura obrigatoria de slots em `100%`;
-- relatorio HTML gerado em `runtime/reports/eval_suite/eval_suite_report.html`.
+- relatório HTML gerado em `runtime/reports/eval_suite/eval_suite_report.html`.
 
-Proximos incrementos restantes:
+Próximos incrementos restantes:
 
-- UI simples de trace/replay para demonstracao;
-- LLM-as-a-judge em amostras selecionadas para avaliar tom e qualidade de decisao;
-- persistencia de estado em Redis/Postgres.
+- UI simples de trace/replay para demonstração;
+- LLM-as-a-judge em amostras selecionadas para avaliar tom e qualidade de decisão;
+- persistência de estado em Redis/Postgres.

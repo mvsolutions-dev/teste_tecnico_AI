@@ -1,12 +1,12 @@
 # AutoSeguro AgentOps — FDE / AI Engineer Take-home
 
-Esta entrega transforma o desafio original em uma camada operacional auditavel para
-atendimento de seguro auto. Nao e apenas um chatbot: o agente conversa com o lead,
-coleta dados minimos, chama o legado `/quote`, decide quando pode resolver sozinho,
-encaminha quando precisa de humano, nao inventa preco quando a infraestrutura falha e
-gera evidencias locais de qualidade, resiliencia e seguranca.
+Esta entrega transforma o desafio original em uma camada operacional auditável para
+atendimento de seguro auto. Não é apenas um chatbot: o agente conversa com o lead,
+coleta dados mínimos, chama o legado `/quote`, decide quando pode resolver sozinho,
+encaminha quando precisa de humano, não inventa preço quando a infraestrutura falha e
+gera evidências locais de qualidade, resiliência e segurança.
 
-## Evaluator Fast Path — 10-minute review
+## Caminho Rápido Para Avaliação — revisão em 10 minutos
 
 ```bash
 cd agent-service
@@ -14,7 +14,7 @@ python -m pip install -e ".[dev]"
 python scripts/smoke_delivery.py --limit 250
 ```
 
-Open:
+Abra:
 
 - `runtime/reports/delivery_smoke/control_tower.html`
 - `runtime/reports/delivery_smoke/trace_replay.html`
@@ -24,13 +24,13 @@ Open:
 - `runtime/reports/delivery_smoke/demo_walkthrough/demo_walkthrough.html`
 - `runtime/reports/delivery_smoke/security_scan/security_scan_report.html`
 
-Expected:
+Esperado:
 
 - `delivery_smoke_report.json` => `gate=PASS`
 - `terminal_handoff_violations` => `0`
-- no raw CPF/phone/email/plate in generated logs/reports
+- sem CPF, telefone, e-mail ou placa em claro nos logs/reports gerados
 
-Optional deeper checks:
+Validações opcionais:
 
 ```bash
 python scripts/smoke_delivery.py --full
@@ -39,79 +39,75 @@ python scripts/http_e2e_smoke.py --start-services
 python scripts/llm_provider_smoke.py --provider fake
 ```
 
-If Azure/OpenAI variables are absent, the LLM judge is reported as `skipped`; the
-main flow still runs deterministically.
+Se as variáveis Azure/OpenAI não estiverem configuradas, o LLM judge aparece como
+`skipped`; o fluxo principal continua rodando de forma determinística.
 
-## What this is
+## O que é esta entrega
 
-- Operational agent layer for AutoSeguro leads, built to sit in front of an unstable
-  legacy quotation service.
-- Public HTTP API: `/health`, `POST /chat`, `GET /conversations/{conversation_id}`,
+- Camada operacional de agente para leads da AutoSeguro, construída para operar
+  diante de um serviço legado de cotação instável.
+- API HTTP pública: `/health`, `POST /chat`, `GET /conversations/{conversation_id}`,
   `GET /ops/metrics`.
-- Dataset-driven evaluation: replay/eval suite, acceptance suite, chaos matrix, trace
-  replay, security scan and control tower.
-- LLM-first when configured, deterministic-safe when not configured. The core flow
-  works without API keys.
+- Avaliação guiada por dataset: replay/eval suite, acceptance suite, chaos matrix,
+  trace replay, security scan e control tower.
+- LLM-first quando configurado, deterministic-safe quando não configurado. O fluxo
+  principal funciona sem chaves externas.
 
-## What to inspect first
+## O que inspecionar primeiro
 
-- `agent-service/app/agent.py`: conversation orchestration and handoff decisions.
-- `agent-service/app/llm/`: provider adapters for disabled/fake/OpenAI/Azure/OpenAI-compatible.
+- `agent-service/app/agent.py`: orquestração da conversa e decisões de handoff.
+- `agent-service/app/llm/`: adapters de providers para disabled/fake/OpenAI/Azure/OpenAI-compatible.
 - `agent-service/app/quote_client.py`: timeout, retry, backoff, circuit breaker,
-  cache and estimate fallback.
-- `agent-service/app/pii.py`: masking of CPF, phone, email and plate.
+  cache e fallback de estimativa.
+- `agent-service/app/pii.py`: mascaramento de CPF, telefone, e-mail e placa.
 - `agent-service/scripts/run_eval_suite.py`: dataset replay at scale.
-- `agent-service/scripts/run_chaos_matrix.py`: unstable legacy behavior.
-- `agent-service/scripts/security_scan.py`: raw PII gate for generated artifacts.
+- `agent-service/scripts/run_chaos_matrix.py`: comportamento instável do legado.
+- `agent-service/scripts/security_scan.py`: gate de PII bruta para artefatos gerados.
 
-## Core decisions
+## Decisões principais
 
-- Official price only appears when `quote_status=success` from the real `/quote` call
-  or from a real cached quote.
-- Preliminary estimate is never official quote and always requires human validation.
-- Handoff is terminal: after human routing, later messages are stored as context and do
-  not reopen quotation automatically.
-- Logs, replay reports, SQLite state and debug endpoints use redacted state.
-- The dataset is used as evaluation material, not just as prompt inspiration.
+- Preço oficial só aparece quando `quote_status=success` vem da chamada real ao
+  `/quote` ou de uma cotação real em cache.
+- Estimativa preliminar nunca é cotação oficial e sempre exige validação humana.
+- Handoff é terminal: depois do encaminhamento humano, mensagens posteriores são
+  armazenadas como contexto e não reabrem cotação automaticamente.
+- Logs, replay reports, estado SQLite e endpoints de debug usam estado redigido.
+- O dataset é usado como material de avaliação, não apenas como inspiração textual.
 
 ## LLM-first, deterministic-safe
 
-The agent runs in two modes:
+O agente roda em dois modos:
 
-1. **LLM-first**, when a provider is configured:
-   - interprets free-form lead messages;
-   - extracts slots into a typed contract;
-   - classifies intent and commercial objections;
-   - proposes a premium consultant-style reply.
+1. **LLM-first**, quando um provider está configurado:
+   - interpreta mensagens livres do lead;
+   - extrai slots para um contrato tipado;
+   - classifica intenção e objeções comerciais;
+   - propõe uma resposta em tom consultivo.
 
-2. **Deterministic-safe**, when no provider is configured:
-   - any evaluator can run the project without external keys;
-   - local gates do not depend on OpenAI/Azure availability;
-   - pricing and handoff policies remain reproducible.
+2. **Deterministic-safe**, quando nenhum provider está configurado:
+   - qualquer avaliador pode rodar o projeto sem chaves externas;
+   - gates locais não dependem da disponibilidade de OpenAI/Azure;
+   - políticas de preço e handoff continuam reproduzíveis.
 
-In both modes, critical decisions are protected by deterministic code: official price
-only after `/quote` success, legacy failure becomes safe handoff, handoff is terminal
-and PII is redacted.
-
-Provider selection is controlled by `AUTOSEGURO_LLM_PROVIDER`:
+A seleção de providers é controlada por `AUTOSEGURO_LLM_PROVIDER`:
 
 ```text
 disabled | fake | openai | azure_openai | openai_compatible | azure_foundry | auto
 ```
 
-`auto` priority:
+Prioridade do modo `auto`:
 
-1. OpenAI-compatible / Azure Foundry when complete envs exist;
+1. OpenAI-compatible / Azure Foundry quando as envs completas existem;
 2. Azure OpenAI;
-3. OpenAI direct;
+3. OpenAI direto;
 4. disabled.
 
-### Enable OpenAI direct
+### Habilitar OpenAI direto
 
 ```bash
 cd agent-service
 cp .env.example .env
-# fill only locally:
+# preencher apenas localmente:
 AUTOSEGURO_LLM_PROVIDER=openai
 OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-4o-mini
@@ -119,7 +115,7 @@ OPENAI_MODEL=gpt-4o-mini
 python scripts/llm_provider_smoke.py --provider openai
 ```
 
-### Enable Azure OpenAI
+### Habilitar Azure OpenAI
 
 ```bash
 AUTOSEGURO_LLM_PROVIDER=azure_openai
@@ -131,7 +127,7 @@ AZURE_OPENAI_API_VERSION=2024-02-15-preview
 python scripts/llm_provider_smoke.py --provider azure_openai
 ```
 
-### Enable OpenAI-compatible / Foundry
+### Habilitar OpenAI-compatible / Foundry
 
 ```bash
 AUTOSEGURO_LLM_PROVIDER=openai_compatible
@@ -142,33 +138,34 @@ OPENAI_COMPATIBLE_MODEL=...
 python scripts/llm_provider_smoke.py --provider openai_compatible
 ```
 
-The provider smoke writes reports under `runtime/reports/` and never prints or persists
-API keys.
+O provider smoke grava reports em `runtime/reports/` e nunca imprime ou persiste
+chaves de API.
 
-## How the conversation dataset was used
+## Como o dataset de conversas foi usado
 
-I did not use the dataset as raw few-shot prompt examples or model training data. The
-history contains synthetic PII, media markers, objections and varied outcomes; copying
-raw examples into prompts would increase leakage risk and make behavior harder to audit.
+O dataset não foi usado como exemplos brutos para o modelo nem como dado de treino.
+O histórico contém PII sintética, marcadores de mídia, objeções e resultados variados;
+copiar exemplos brutos nas instruções do modelo aumentaria o risco de vazamento e
+dificultaria a auditoria do comportamento.
 
-Instead, the dataset became operational engineering material:
+Em vez disso, o dataset virou material de engenharia operacional:
 
-1. **EDA / Dataset Profiler**: message volume, media incidence, free-text PII, objections and outcomes.
-2. **Agent design**: required slots, handoff rules, media fallback, PII protection and post-quote objection handling.
-3. **Replay Arena**: conversations replayed against the agent with status, quote_status and handoff reasons.
-4. **Eval Suite**: full in-process dataset evaluation for fast reproducibility.
-5. **Chaos Matrix**: dataset plus simulated legacy failures to prove `unavailable` never invents price.
-6. **Trace Replay**: visual redacted transcript with state after each turn.
+1. **EDA / Dataset Profiler**: volume de mensagens, incidência de mídia, PII em texto livre, objeções e outcomes.
+2. **Design do agente**: slots obrigatórios, regras de handoff, fallback para mídia, proteção de PII e tratamento de objeções pós-cotação.
+3. **Replay Arena**: conversas reproduzidas contra o agente com status, `quote_status` e motivos de handoff.
+4. **Eval Suite**: avaliação in-process do dataset completo para reprodutibilidade rápida.
+5. **Chaos Matrix**: dataset combinado com falhas simuladas do legado para provar que `unavailable` nunca inventa preço.
+6. **Trace Replay**: transcript visual redigido com estado depois de cada turno.
 
-In short: the dataset did not become loose LLM memory. It became evidence, tests,
-decision criteria and operational design.
+Em resumo: o dataset não virou memória solta do LLM. Ele virou evidência, testes,
+critérios de decisão e design operacional.
 
-## Optional and out of scope
+## Opcional e fora de escopo
 
-- Optional: OpenAI/Azure OpenAI extraction assist and LLM-as-a-Judge.
-- Optional: local SQLite state with `AUTOSEGURO_STATE_STORE=sqlite`.
-- Out of scope: cloud deploy, policy issuance, real media transcription, billing or a
-  complex web UI.
+- Opcional: assistência de extração com OpenAI/Azure OpenAI e LLM-as-a-Judge.
+- Opcional: estado local SQLite com `AUTOSEGURO_STATE_STORE=sqlite`.
+- Fora de escopo: deploy em nuvem, emissão de apólice, transcrição real de mídia,
+  billing ou uma UI web complexa.
 
 ## Original challenge statement
 
@@ -273,9 +270,9 @@ Boa! 🚀
 
 ## Rodada "fora da caixa": AutoSeguro AgentOps
 
-Esta branch inclui uma primeira solucao de produto para o desafio em `agent-service/`.
-A proposta nao e apenas um chatbot: e um agente operacional auditavel, com uma
-"caixa-preta" de execucao e uma mini arena de replay.
+Esta branch inclui uma primeira solução de produto para o desafio em `agent-service/`.
+A proposta não é apenas um chatbot: é um agente operacional auditável, com uma
+"caixa-preta" de execução e uma mini arena de replay.
 
 ### O que foi implementado
 
@@ -283,62 +280,62 @@ A proposta nao e apenas um chatbot: e um agente operacional auditavel, com uma
 - Estado estruturado por conversa:
   - idade;
   - CEP;
-  - veiculo/ano;
+  - veículo/ano;
   - plano;
-  - data de inicio;
+  - data de início;
   - PII mascarada.
 - `QuoteClient` resiliente para o sistema legado:
   - timeout;
   - retry;
   - backoff;
   - circuit breaker;
-  - cache de cotacoes reais;
+  - cache de cotações reais;
   - estimativa preliminar quando o legado cai;
-  - classificacao de `success`, `refused`, `invalid` e `unavailable`.
+  - classificação de `success`, `refused`, `invalid` e `unavailable`.
 - Handoff humano explicito quando:
   - o lead pede humano/corretor;
-  - chega midia sem conteudo textual util;
-  - a cotacao e recusada;
-  - o legado fica indisponivel apos retries;
-  - surge objecao comercial apos cotacao.
+  - chega mídia sem conteúdo textual útil;
+  - a cotação é recusada;
+  - o legado fica indisponível após retries;
+  - surge objeção comercial após cotação.
 - `handoff_packet` estruturado para o corretor humano:
-  - lead e veiculo;
-  - cotacao;
+  - lead e veículo;
+  - cotação;
   - motivo;
   - resumo;
-  - proxima melhor acao.
+  - próxima melhor ação.
 - `FlightRecorder` em JSONL com:
   - mensagens mascaradas;
-  - slots extraidos;
-  - tentativas de cotacao;
-  - decisao final.
+  - slots extraídos;
+  - tentativas de cotação;
+  - decisão final.
 - `Replay Arena` para rodar conversas do dataset contra o agente e gerar um resumo.
-- `Dataset Profiler` para transformar o historico em insumos de engenharia:
-  distribuicao de outcomes, midia, PII, objecoes e implicacoes para o agente.
+- `Dataset Profiler` para transformar o histórico em insumos de engenharia:
+  distribuição de outcomes, mídia, PII, objeções e implicações para o agente.
 - Loader robusto do parquet via DuckDB, com fallback para pandas e `sample.jsonl`.
 - `Eval Suite` in-process para rodar 2.500 conversas sem depender de HTTP.
-- Relatorio HTML executivo em `runtime/reports/eval_suite/eval_suite_report.html`.
+- Relatório HTML executivo em `runtime/reports/eval_suite/eval_suite_report.html`.
 - Control Tower consolidada em `runtime/reports/control_tower.html`.
 - LLM-as-a-Judge opcional via Azure OpenAI para auditar uma amostra de conversas.
-- Acceptance Suite com cenarios de produto alinhados aos criterios do desafio.
+- Acceptance Suite com cenários de produto alinhados aos critérios do desafio.
 - Chaos Matrix para medir comportamento sob falha/timeout do legado.
 - Endpoint de debug redigido: `GET /conversations/{conversation_id}`.
 - Endpoint operacional simples: `GET /ops/metrics`.
 - Header `X-Trace-Id` em `POST /chat`.
 - Modo OpenAI opcional:
-  - se `OPENAI_API_KEY` estiver definida, o agente pode usar LLM para complementar a extracao;
-  - sem chave, o fluxo roda por extracao deterministica e testes continuam verdes.
+  - se `OPENAI_API_KEY` estiver definida, o agente pode usar LLM para complementar a extração;
+  - sem chave, o fluxo roda por extração determinística e testes continuam verdes.
 
 Documentos de entrega:
 
-- `docs/ARCHITECTURE.md`: arquitetura, estado, contratos de decisao e limites.
+- `docs/ARCHITECTURE.md`: arquitetura, estado, contratos de decisão e limites.
 - `docs/EVALUATION.md`: gates, dataset profile, replay arena e achados.
-- `docs/REVIEW_GUIDE.md`: roteiro objetivo para avaliacao tecnica em 10 minutos.
-- `docs/DOSSIE_TECNICO_AUTOSEGURO.md`: dossie executivo-tecnico da entrega.
+- `docs/REVIEW_GUIDE.md`: roteiro objetivo para avaliação técnica em 10 minutos.
+- `docs/DOSSIE_TECNICO_AUTOSEGURO.md`: dossiê executivo-técnico da entrega.
 - `docs/BASELINE.md`: baseline local antes do polish 10/10.
 - `docs/FRESH_CLONE_CHECKLIST.md`: roteiro para validar em clone limpo.
 
-### Revisao rapida para avaliador
+### Revisão rápida para avaliador
 
 Para validar a entrega sem subir tudo manualmente:
 
@@ -359,7 +356,7 @@ O comando gera:
 - `runtime/reports/delivery_smoke/security_scan/security_scan_report.html`;
 - `runtime/reports/delivery_smoke/eval_suite/eval_suite_report.html`.
 
-Use `--full` para rodar a avaliacao no dataset completo:
+Use `--full` para rodar a avaliação no dataset completo:
 
 ```bash
 python scripts/smoke_delivery.py --full
@@ -379,7 +376,7 @@ No Windows, os mesmos atalhos existem via PowerShell:
 powershell -ExecutionPolicy Bypass -File scripts/dev.ps1 smoke
 ```
 
-Tambem ha CI em `.github/workflows/ci.yml`, rodando `pytest` e `ruff` para o
+Também ha CI em `.github/workflows/ci.yml`, rodando `pytest` e `ruff` para o
 `agent-service`.
 
 ### Como rodar
@@ -403,14 +400,14 @@ cp .env.example .env  # opcional; coloque sua OPENAI_API_KEY se quiser usar LLM
 uv run uvicorn app.main:app --port 8010
 ```
 
-Teste rapido:
+Teste rápido:
 
 ```bash
 curl -X POST localhost:8010/chat \
   -H "content-type: application/json" \
   -d '{
     "conversation_id": "demo-001",
-    "message": "Sou Ana, tenho 35 anos, CEP 01310-100. Meu carro e um Corolla 2022 e quero completo com inicio em 15/07/2026."
+    "message": "Sou Ana, tenho 35 anos, CEP 01310-100. Meu carro e um Corolla 2022 e quero completo com início em 15/07/2026."
   }'
 ```
 
@@ -419,14 +416,14 @@ Endpoints do agente:
 - `GET /health`
 - `POST /chat`
 - `GET /conversations/{conversation_id}` — estado redigido para debug
-- `GET /ops/metrics` — contadores simples de operacao
+- `GET /ops/metrics` — contadores simples de operação
 
 O `POST /chat` retorna `X-Trace-Id` no header para correlacionar chamada HTTP,
 logs e replay.
 
 ### Smoke HTTP E2E local
 
-Para provar a integracao HTTP real entre `agent-service` e `quote-service`:
+Para provar a integração HTTP real entre `agent-service` e `quote-service`:
 
 ```bash
 cd agent-service
@@ -438,15 +435,15 @@ Saidas:
 - `runtime/reports/http_e2e/http_e2e_report.json`
 - `runtime/reports/http_e2e/http_e2e_report.html`
 
-Tambem pode ser anexado ao delivery smoke:
+Também pode ser anexado ao delivery smoke:
 
 ```bash
 python scripts/smoke_delivery.py --limit 250 --include-http-e2e --http-e2e-start-services
 ```
 
-### Persistencia SQLite opcional
+### Persistência SQLite opcional
 
-O default segue sendo memoria. Para testar estado local persistente e redigido:
+O default segue sendo memória. Para testar estado local persistente e redigido:
 
 ```bash
 cd agent-service
@@ -483,8 +480,8 @@ python agent-service/scripts/replay_arena.py \
   --markdown-output runtime/reports/arena_report.md
 ```
 
-O loader tenta DuckDB primeiro, depois pandas, e so cai para `dataset/sample.jsonl`
-se o parquet estiver indisponivel. No ambiente Windows desta rodada, DuckDB leu o
+O loader tenta DuckDB primeiro, depois pandas, e só cai para `dataset/sample.jsonl`
+Se o parquet estiver indisponível. No ambiente Windows desta rodada, DuckDB leu o
 parquet completo com `26.470` mensagens e `2.500` conversas.
 
 ### Rodar Dataset Profiler
@@ -498,9 +495,9 @@ python agent-service/scripts/profile_dataset.py \
 
 O profile local indicou:
 
-- `56,8%` das conversas com midia;
+- `56,8%` das conversas com mídia;
 - `2.500` CPFs e `2.500` CEPs em texto livre;
-- objecoes comerciais frequentes de preco, concorrente e franquia.
+- objeções comerciais frequentes de preço, concorrente e franquia.
 
 Se quiser regenerar o dataset:
 
@@ -510,8 +507,8 @@ uv run scripts/generate_dataset.py --n 2500 --seed 42 --out dataset/conversation
 
 ### Rodar Eval Suite completa
 
-Esta e a avaliacao mais importante da entrega. Ela usa o mesmo agente, mas chama
-a logica de cotacao in-process para rodar o dataset inteiro rapidamente.
+Esta é a avaliação mais importante da entrega. Ela usa o mesmo agente, mas chama
+a lógica de cotação in-process para rodar o dataset inteiro rapidamente.
 
 ```bash
 python agent-service/scripts/run_eval_suite.py \
@@ -528,17 +525,17 @@ Saidas:
 Resultado local desta rodada:
 
 - gate: `PASS`;
-- cenario estavel: `2.500` conversas em `2,288s`;
+- cenário estavel: `2.500` conversas em `2,288s`;
 - throughput: `1.092 conversas/s`;
-- `0` violacoes de handoff terminal;
-- cobertura de slots obrigatorios: `100%` para nome, idade, CEP, ano do veiculo e plano;
-- cenario instavel: `250` conversas com falha/timeout simulados e `0` violacoes de gate.
+- `0` violações de handoff terminal;
+- cobertura de slots obrigatórios: `100%` para nome, idade, CEP, ano do veículo e plano;
+- cenário instável: `250` conversas com falha/timeout simulados e `0` violações de gate.
 
 ### Rodar Acceptance Suite
 
-Valida cenarios de produto diretamente ligados aos criterios do desafio: caminho
-feliz, midia, pedido humano, legado indisponivel, cotacao recusada, aceite,
-rejeicao, objecao comercial e lead incompleto.
+Valida cenários de produto diretamente ligados aos critérios do desafio: caminho
+feliz, mídia, pedido humano, legado indisponível, cotação recusada, aceite,
+rejeicao, objeção comercial e lead incompleto.
 
 ```bash
 python agent-service/scripts/run_acceptance_suite.py \
@@ -554,7 +551,7 @@ Saidas:
 
 Executa o agente contra o dataset variando a instabilidade do legado. O gate
 principal verifica que `quote_status=unavailable` termina em handoff, nunca em
-preco inventado.
+preço inventado.
 
 ```bash
 python agent-service/scripts/run_chaos_matrix.py \
@@ -570,8 +567,8 @@ Saidas:
 
 ### Rodar Demo Walkthrough
 
-Gera uma demonstracao narrativa com quatro conversas curtas: cotacao oficial,
-legado indisponivel, midia sem transcricao e objecao comercial apos cotacao.
+Gera uma demonstração narrativa com quatro conversas curtas: cotação oficial,
+legado indisponível, mídia sem transcrição e objeção comercial após cotação.
 
 ```bash
 python agent-service/scripts/demo_walkthrough.py \
@@ -585,8 +582,8 @@ Saidas:
 
 ### Rodar Security Scan
 
-Varre logs e relatorios gerados em busca de CPF, telefone, e-mail e placa em claro.
-CEP completo entra como warning, pois pode ser necessario para cotacao.
+Varre logs e relatórios gerados em busca de CPF, telefone, e-mail e placa em claro.
+CEP completo entra como warning, pois pode ser necessário para cotação.
 
 ```bash
 python agent-service/scripts/security_scan.py \
@@ -601,18 +598,18 @@ Saidas:
 
 ### Decisoes de engenharia
 
-1. **Nao inventar preco**: preco so sai depois de chamada real a `/quote`.
-2. **Legado instavel e tratado como regra de produto**: falha/timeout vira retry e,
+1. **Não inventar preço**: preço só sai depois de chamada real a `/quote`.
+2. **Legado instável e tratado como regra de produto**: falha/timeout vira retry e,
    se persistir, handoff com motivo claro.
-3. **Plano padrao defensavel**: se idade, CEP e veiculo estao completos e so falta
-   plano, o agente usa `Completo` como recomendacao equilibrada e registra isso em
+3. **Plano padrao defensável**: se idade, CEP e veículo estao completos e só falta
+   plano, o agente usa `Completo` como recomendação equilibrada e registra isso em
    `slot_defaulted`.
 4. **PII protegida nos logs**: CPF, telefone, e-mail e placa sao mascarados antes
    de persistir eventos.
-5. **Handoff auditavel**: toda passagem para humano tem `handoff_reason`.
-6. **Handoff terminal**: depois de encaminhar ao humano, o agente nao reabre o
-   fluxo de cotacao automaticamente com mensagens posteriores.
-7. **Estimativa nao e cotacao oficial**: se o legado cair e nao houver cache, o
+5. **Handoff auditável**: toda passagem para humano tem `handoff_reason`.
+6. **Handoff terminal**: depois de encaminhar ao humano, o agente não reabre o
+   fluxo de cotação automaticamente com mensagens posteriores.
+7. **Estimativa não é cotação oficial**: se o legado cair e não houver cache, o
    agente gera apenas uma estimativa preliminar para orientar o humano, marcada
    com `requires_human_validation=true`.
 
@@ -624,15 +621,15 @@ Com quote API estavel (`QUOTE_FAILURE_RATE=0`, `QUOTE_SLOW_RATE=0`):
 - premio mensal: `R$ 209,90`;
 - primeiro pagamento proporcional para 15/07/2026: `R$ 115,11`;
 - testes unitarios: `11 passed`;
-- arena sobre `sample.jsonl`: 3 conversas, 2 cotadas, 1 handoff por midia sem texto.
+- arena sobre `sample.jsonl`: 3 conversas, 2 cotadas, 1 handoff por mídia sem texto.
 
-### Validacao ampliada desta rodada
+### Validação ampliada desta rodada
 
 - testes unitarios: `11 passed`;
-- lint: `ruff check .` sem violacoes;
+- lint: `ruff check .` sem violações;
 - profile: parquet completo via DuckDB, `26.470` mensagens / `2.500` conversas;
 - arena estavel: 200 conversas, `58 quoted`, `142 handoff`;
-- arena instavel: 50 conversas com `QUOTE_FAILURE_RATE=0.45`, `10 unavailable`
+- arena instável: 50 conversas com `QUOTE_FAILURE_RATE=0.45`, `10 unavailable`
   encaminhadas com handoff claro.
 - eval suite in-process: 2.500 conversas em 2,288s, gate `PASS`.
 
@@ -646,7 +643,7 @@ python agent-service/scripts/llm_judge_eval.py \
   --output runtime/reports/llm_judge_report.json
 ```
 
-Resultado local apos calibragem:
+Resultado local após calibragem:
 
 - `passed=6`;
 - `failed=0`;
@@ -664,7 +661,7 @@ python agent-service/scripts/build_control_tower.py \
 ### Gerar Trace Replay visual
 
 O Trace Replay gera uma pagina HTML redigida com a conversa, resposta do agente,
-status, slots e decisao por turno. Serve para auditar rapidamente uma execucao
+status, slots e decisão por turno. Serve para auditar rapidamente uma execução
 sem abrir logs JSONL.
 
 ```bash

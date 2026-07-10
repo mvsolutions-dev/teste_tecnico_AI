@@ -65,7 +65,7 @@ class FakeLLMProvider:
                 "intent": "quote_request",
                 "commercial_signals": {},
                 "suggested_next_action": "continue",
-                "reply_draft": "Adapter validado sem dados sensiveis.",
+                "reply_draft": "Adapter validado sem dados sensíveis.",
             }
         payload = _extract_prompt_payload(user_prompt)
         message = str(payload.get("lead_message_redacted") or payload.get("message") or user_prompt)
@@ -112,17 +112,17 @@ class FakeLLMProvider:
         if any(term in folded for term in ("humano", "corretor", "atendente", "especialista")):
             intent = "human_request"
             action = "handoff"
-            reply = "Posso chamar um especialista humano e manter tudo que ja coletamos no contexto."
+            reply = "Posso chamar um especialista humano e manter tudo que já coletamos no contexto."
         elif signals["price_objection"] or signals["competitor_mentioned"]:
             intent = "objection"
             action = "explain_quote"
-            reply = "Entendi a preocupacao. Posso revisar cobertura e franquia com voce sem inventar desconto."
+            reply = "Entendi a preocupação. Posso revisar cobertura e franquia com você sem inventar desconto."
         elif not slots.get("veiculo_ano"):
             intent = "incomplete"
             action = "ask_missing_slot"
-            reply = "Consigo seguir. Para calcular com seguranca, me diga o modelo e ano do veiculo."
+            reply = "Consigo seguir. Para calcular com segurança, me diga o modelo e ano do veículo."
         else:
-            reply = "Perfeito, ja tenho os principais dados para seguir com uma cotacao segura."
+            reply = "Perfeito, já tenho os principais dados para seguir com uma cotação segura."
 
         return {
             "extracted_slots": slots,
@@ -140,7 +140,7 @@ class FakeLLMProvider:
         timeout_seconds: float | None = None,
     ) -> str:
         await asyncio.sleep(0)
-        return "Resposta revisada em tom consultivo, sem dados sensiveis."
+        return "Resposta revisada em tom consultivo, sem dados sensíveis."
 
 
 class OpenAIProvider:

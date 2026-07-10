@@ -5,24 +5,24 @@
 O agente opera em dois modos:
 
 - **LLM-first**, quando `AUTOSEGURO_LLM_PROVIDER` aponta para um provider configurado.
-- **Deterministic-safe**, quando nao ha provider ou quando o provider falha.
+- **Deterministic-safe**, quando não há provider ou quando o provider falha.
 
-Isso permite demonstrar uma experiencia de agente premium sem transformar LLM em ponto
-unico de falha.
+Isso permite demonstrar uma experiência de agente premium sem transformar LLM em ponto
+único de falha.
 
 ## Fluxo
 
 ```text
 Mensagem do lead
-  -> redacao de PII / contexto seguro
+  -> redação de PII / contexto seguro
   -> LLM provider opcional
       -> extracted_slots
       -> intent
       -> commercial_signals
       -> suggested_next_action
       -> reply_draft
-  -> merge deterministico de slots
-  -> guardrails de politica
+  -> merge determinístico de slots
+  -> guardrails de política
   -> quote_client ou pergunta objetiva ou handoff
   -> resposta final redigida no FlightRecorder
 ```
@@ -31,8 +31,8 @@ Mensagem do lead
 
 | Provider | Uso | Rede externa |
 | --- | --- | --- |
-| `disabled` | default seguro | nao |
-| `fake` | testes e smoke sem custo | nao |
+| `disabled` | default seguro | não |
+| `fake` | testes e smoke sem custo | não |
 | `openai` | OpenAI direto | sim |
 | `azure_openai` | Azure OpenAI | sim |
 | `openai_compatible` | Foundry ou endpoint compatível | sim |
@@ -75,21 +75,21 @@ O LLM deve retornar:
 }
 ```
 
-O payload e validado com Pydantic. Se vier invalido, o agente usa fallback
-deterministico.
+O payload é validado com Pydantic. Se vier inválido, o agente usa fallback
+determinístico.
 
 ## Guardrails
 
-O LLM pode sugerir, mas nao pode sozinho:
+O LLM pode sugerir, mas não pode sozinho:
 
-- inventar preco, franquia, cobertura ou desconto;
-- tratar estimativa como cotacao oficial;
+- inventar preço, franquia, cobertura ou desconto;
+- tratar estimativa como cotação oficial;
 - reabrir handoff;
 - ignorar falha do legado;
-- pular slot obrigatorio;
+- pular slot obrigatório;
 - persistir PII crua em logs/reports.
 
-`reply_draft` com marcadores de preco como `R$` e bloqueado antes de chegar ao lead.
+`reply_draft` com marcadores de preço como `R$` é bloqueado antes de chegar ao lead.
 
 ## Como testar providers reais
 
@@ -102,23 +102,23 @@ python scripts/llm_provider_smoke.py --provider azure_openai
 python scripts/llm_provider_smoke.py --provider openai_compatible
 ```
 
-Sem envs, providers externos ficam `SKIPPED`. Com envs, o script valida JSON, latencia
+Sem envs, providers externos ficam `SKIPPED`. Com envs, o script valida JSON, latência
 e schema sem imprimir chaves.
 
 ## Uso do dataset
 
-O dataset nao foi usado como few-shot bruto. Ele foi usado para:
+O dataset não foi usado como few-shot bruto. Ele foi usado para:
 
-- profiling de volume, PII, midia e outcomes;
+- profiling de volume, PII, mídia e outcomes;
 - desenho de slots e handoffs;
 - eval suite em massa;
-- chaos matrix com legado instavel;
+- chaos matrix com legado instável;
 - trace replay redigido para auditoria.
 
 ## Fora de escopo
 
 - Fine-tuning;
-- memoria vetorial com conversas brutas;
-- transcricao real de midia;
+- memória vetorial com conversas brutas;
+- transcrição real de mídia;
 - deploy cloud;
-- emissao de apolice.
+- emissão de apólice.

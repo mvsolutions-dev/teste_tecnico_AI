@@ -29,10 +29,10 @@ python scripts/smoke_delivery.py --limit 250 --include-llm-judge
 python scripts/http_e2e_smoke.py --start-services
 ```
 
-Observacoes:
+Observações:
 
-- O fluxo principal nao precisa de chave de LLM.
+- O fluxo principal não precisa de chave de LLM.
 - Se o LLM judge estiver sem variaveis de ambiente, ele deve aparecer como
-  `skipped`, nao como falha.
+  `skipped`, não como falha.
 - O SQLite opcional deve ser testado com `AUTOSEGURO_STATE_STORE=sqlite`, mas o
-  banco gerado em `runtime/state/` nao deve ser commitado.
+  banco gerado em `runtime/state/` não deve ser commitado.

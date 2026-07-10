@@ -1,4 +1,4 @@
-# AutoSeguro AgentOps - Avaliacao
+# AutoSeguro AgentOps - Avaliação
 
 ## Gates locais
 
@@ -11,7 +11,7 @@ python -m ruff check .
 Resultado local desta rodada:
 
 - `58 passed, 1 warning`
-- `ruff`: sem violacoes
+- `ruff`: sem violações
 
 Baseline registrado em `docs/BASELINE.md`:
 
@@ -38,12 +38,12 @@ Resultado observado:
 - 26.470 mensagens;
 - 2.500 conversas;
 - 16.470 mensagens de lead;
-- 56,8% das conversas contem algum tipo de midia;
+- 56,8% das conversas contem algum tipo de mídia;
 - 2.500 CPFs e 2.500 CEPs aparecem em texto livre;
-- outcomes: `em_negociacao=757`, `ganho=712`, `perdido=538`, `sem_resposta=493`.
+- outcomes: `em_negociação=757`, `ganho=712`, `perdido=538`, `sem_resposta=493`.
 
-Implicacao: o agente precisa redigir PII em logs, tratar midia sem transcricao e
-ter criterio claro de objecao/handoff.
+Implicação: o agente precisa redigir PII em logs, tratar mídia sem transcrição e
+ter critério claro de objeção/handoff.
 
 ## Replay Arena - quote estavel
 
@@ -65,13 +65,13 @@ Resultado observado com `QUOTE_FAILURE_RATE=0` e `QUOTE_SLOW_RATE=0`:
 - `quoted=58`;
 - `handoff=142`;
 - `quote_status`: `success=151`, `refused=49`;
-- cobertura de slots obrigatorios: 100% para idade, CEP, ano do veiculo e plano;
+- cobertura de slots obrigatórios: 100% para idade, CEP, ano do veículo e plano;
 - principais handoffs:
-  - midia sem texto;
-  - objecao comercial apos cotacao;
-  - cotacao recusada por idade ou veiculo antigo.
+  - mídia sem texto;
+  - objeção comercial após cotação;
+  - cotação recusada por idade ou veículo antigo.
 
-## Replay Arena - legado instavel
+## Replay Arena - legado instável
 
 Comando:
 
@@ -96,7 +96,7 @@ Resultado observado com `QUOTE_FAILURE_RATE=0.45`, `QUOTE_SLOW_RATE=0`,
 - handoff por indisponibilidade do legado: 10 conversas.
 
 Bug encontrado e corrigido nessa rodada: depois de handoff por falha do legado,
-mensagens futuras nao podem reabrir o fluxo e virar `quoted`. Handoff agora e
+mensagens futuras não podem reabrir o fluxo e virar `quoted`. Handoff agora e
 terminal e coberto por teste.
 
 ## Eval Suite in-process
@@ -110,7 +110,7 @@ python agent-service/scripts/run_eval_suite.py \
   --output-dir runtime/reports/eval_suite
 ```
 
-Por que existe: a Replay Arena via HTTP e util para smoke real, mas e lenta para
+Por que existe: a Replay Arena via HTTP e útil para smoke real, mas e lenta para
 rodar 2.500 conversas frequentemente. A Eval Suite usa o mesmo agente e importa
 a regra real de `quote-service/app/quote_logic.py`, simulando falha/timeout no
 adaptador. Assim conseguimos avaliar todo o dataset em segundos.
@@ -119,14 +119,14 @@ Resultado local:
 
 - gate: `PASS`;
 - dataset: parquet completo via DuckDB;
-- `2.500` conversas avaliadas no cenario estavel;
-- tempo do cenario estavel: `2,288s`;
+- `2.500` conversas avaliadas no cenário estavel;
+- tempo do cenário estavel: `2,288s`;
 - throughput: `1.092,83 conversas/s`;
 - status estavel: `quoted=638`, `handoff=1862`;
 - quote status estavel: `success=1749`, `refused=751`;
-- `0` violacoes de handoff terminal;
-- cobertura de slots: `100%` para nome, idade, CEP, ano do veiculo e plano;
-- cenario instavel: `250` conversas, `unavailable=71`, `0` violacoes de gate.
+- `0` violações de handoff terminal;
+- cobertura de slots: `100%` para nome, idade, CEP, ano do veículo e plano;
+- cenário instável: `250` conversas, `unavailable=71`, `0` violações de gate.
 
 Saidas:
 
@@ -144,24 +144,24 @@ python agent-service/scripts/llm_judge_eval.py \
 ```
 
 O juiz usa Azure OpenAI (`AZURE_DEPLOYMENT_MINI`) e avalia uma amostra curta com
-criterios objetivos: nao inventar preco, PII mascarada, handoff aceitavel,
-resposta util e decisao terminal.
+critérios objetivos: não inventar preço, PII mascarada, handoff aceitavel,
+resposta útil e decisão terminal.
 
-Resultado local apos calibragem:
+Resultado local após calibragem:
 
 - `passed=6`;
 - `failed=0`;
 - `avg_score=97,5`.
 
-Falha descoberta pelo juiz e corrigida: apos o lead recusar ou aceitar a cotacao,
-o agente nao deve repetir uma resposta generica. Agora aceite vai para handoff de
-emissao humana e recusa vai para handoff de retencao/registro de perda.
+Falha descoberta pelo juiz e corrigida: após o lead recusar ou aceitar a cotação,
+o agente não deve repetir uma resposta genérica. Agora aceite vai para handoff de
+emissão humana e recusa vai para handoff de retenção/registro de perda.
 
 ## Cache e estimativa
 
 Testes adicionados:
 
-- chave de cache nao guarda CEP completo;
+- chave de cache não guarda CEP completo;
 - cache hit retorna sem chamada HTTP;
 - estimador marca `estimated=true` e `requires_human_validation=true`;
 - indisponibilidade do legado pode gerar `quote_status=estimated`;
@@ -169,10 +169,10 @@ Testes adicionados:
 
 Politica validada:
 
-- cache de cotacao real pode ser usado como resposta;
-- cache stale so entra em contingencia;
-- estimativa nao e preco oficial;
-- estimativa sempre exige validacao humana e segue para `handoff_packet`.
+- cache de cotação real pode ser usado como resposta;
+- cache stale só entra em contingência;
+- estimativa não é preço oficial;
+- estimativa sempre exige validação humana e segue para `handoff_packet`.
 
 ## O que ainda seria melhorado com mais tempo
 
@@ -183,7 +183,7 @@ Politica validada:
 - Rodar LLM-as-a-judge em amostras de conversas para avaliar tom e completude.
 ## Smoke de entrega
 
-O comando recomendado para uma revisao rapida e:
+O comando recomendado para uma revisao rápida e:
 
 ```bash
 cd agent-service
@@ -230,7 +230,7 @@ redigido com:
 - resposta do agente;
 - status e `quote_status` por turno;
 - slots faltantes;
-- estado do lead apos cada turno;
+- estado do lead após cada turno;
 - handoff packet / estado final.
 
 ```bash
@@ -240,7 +240,7 @@ python agent-service/scripts/build_trace_replay.py \
   --json-output runtime/reports/trace_replay.json
 ```
 
-Esse artefato foi criado para responder rapidamente: "da para rastrear o que
+Esse artefato foi criado para responder rapidamente: "dá para rastrear o que
 aconteceu em uma conversa real?".
 
 ## Acceptance Suite
@@ -250,16 +250,16 @@ python agent-service/scripts/run_acceptance_suite.py \
   --output-dir runtime/reports/acceptance
 ```
 
-A suite cobre os criterios de produto mais importantes:
+A suite cobre os critérios de produto mais importantes:
 
-- caminho feliz com cotacao oficial;
-- midia sem transcricao vira handoff;
+- caminho feliz com cotação oficial;
+- mídia sem transcrição vira handoff;
 - pedido de humano vira handoff;
-- legado indisponivel vira handoff;
-- regras de recusa por idade e veiculo sao respeitadas;
-- aceite pos-cotacao vai para emissao humana;
-- objecao comercial vai para humano;
-- lead incompleto recebe proxima pergunta objetiva.
+- legado indisponível vira handoff;
+- regras de recusa por idade e veículo sao respeitadas;
+- aceite pós-cotação vai para emissão humana;
+- objeção comercial vai para humano;
+- lead incompleto recebe próxima pergunta objetiva.
 
 ## Chaos Matrix
 
@@ -277,8 +277,8 @@ A matriz roda o agente variando a instabilidade do legado:
 - 50% falha / 5% timeout;
 - 80% falha / 10% timeout.
 
-O gate e objetivo: se a cotacao ficar `unavailable`, a conversa precisa terminar
-em handoff e nunca apresentar preco inventado.
+O gate é objetivo: se a cotação ficar `unavailable`, a conversa precisa terminar
+em handoff e nunca apresentar preço inventado.
 
 ## Demo Walkthrough
 
@@ -289,10 +289,10 @@ python agent-service/scripts/demo_walkthrough.py \
 
 O walkthrough gera uma narrativa visual para revisao humana com quatro casos:
 
-- cotacao oficial;
-- legado indisponivel;
-- midia sem transcricao;
-- objecao comercial depois da cotacao.
+- cotação oficial;
+- legado indisponível;
+- mídia sem transcrição;
+- objeção comercial depois da cotação.
 
 ## Security Scan
 
@@ -303,8 +303,8 @@ python agent-service/scripts/security_scan.py \
 ```
 
 O scanner falha se encontrar CPF, telefone, e-mail ou placa em claro nos logs e
-relatorios gerados. CEP completo e reportado como warning porque faz parte do
-dominio de cotacao, mas nao deve ser usado em chave de cache junto com PII.
+relatórios gerados. CEP completo é reportado como warning porque faz parte do
+domínio de cotação, mas não deve ser usado em chave de cache junto com PII.
 
 ## HTTP E2E Smoke opcional
 
@@ -321,10 +321,10 @@ envia quatro conversas via `POST /chat` e checa:
 - `X-Trace-Id` no header;
 - status final esperado;
 - `quote_status=success` apenas no caminho feliz;
-- nenhum preco oficial quando nao houve cotacao oficial;
+- nenhum preço oficial quando não houve cotação oficial;
 - reports JSON/HTML em `runtime/reports/http_e2e/`.
 
-Tambem pode ser executado dentro do delivery smoke:
+Também pode ser executado dentro do delivery smoke:
 
 ```bash
 python scripts/smoke_delivery.py --limit 250 --include-http-e2e --http-e2e-start-services
@@ -355,9 +355,9 @@ python scripts/llm_provider_smoke.py --provider azure_openai
 python scripts/llm_provider_smoke.py --provider openai_compatible
 ```
 
-Sem envs reais, providers externos ficam `SKIPPED` e nao quebram o produto principal.
-Com envs reais, o script valida resposta JSON no schema agentic, latencia, provider e
+Sem envs reais, providers externos ficam `SKIPPED` e não quebram o produto principal.
+Com envs reais, o script valida resposta JSON no schema agentic, latência, provider e
 modelo/deployment, sem imprimir ou persistir chaves.
 
 Os testes unitarios cobrem a factory, provider fake, fallback de erro e guardrails
-contra `reply_draft` com preco inventado. Nenhum teste unitario chama OpenAI/Azure real.
+contra `reply_draft` com preço inventado. Nenhum teste unitario chama OpenAI/Azure real.

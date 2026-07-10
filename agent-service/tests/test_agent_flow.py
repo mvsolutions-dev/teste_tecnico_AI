@@ -66,7 +66,7 @@ async def test_agent_quotes_end_to_end(tmp_path) -> None:
 
     assert response.status == "quoted"
     assert response.quote_status == "success"
-    assert "R$ 209.90/mes" in response.reply
+    assert "R$ 209.90/mês" in response.reply
     assert not response.missing_slots
 
 
@@ -171,7 +171,7 @@ async def test_handoff_is_terminal_and_does_not_reopen_quote_flow(tmp_path) -> N
     assert first.status == "handoff"
     assert second.status == "handoff"
     assert second.handoff_reason == first.handoff_reason
-    assert "ja esta encaminhado" in second.reply
+    assert "já está encaminhado" in second.reply
     assert second.handoff_packet
     assert second.state["messages"][-2]["redacted_content"] == "Tenho mais dados se precisar."
 

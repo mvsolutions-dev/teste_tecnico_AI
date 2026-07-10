@@ -49,8 +49,8 @@ class AutoSeguroAgent:
 
         if state.status == AgentStatus.HANDOFF:
             reply = (
-                "Seu atendimento ja esta encaminhado para um especialista humano. "
-                "Vou manter esta nova mensagem no contexto para ele continuar sem perda de historico."
+                "Seu atendimento já está encaminhado para um especialista humano. "
+                "Vou manter esta nova mensagem no contexto para ele continuar sem perda de histórico."
             )
             return self._respond(state, reply)
 
@@ -235,53 +235,53 @@ class AutoSeguroAgent:
         folded = reason.casefold()
         if "estimativa" in folded:
             return (
-                "Tentei consultar o sistema de cotacao e gerei apenas uma estimativa preliminar. "
-                "Ela nao e cotacao oficial, entao vou encaminhar seu atendimento para um especialista validar os dados e confirmar o valor com seguranca."
+                "Tentei consultar o sistema de cotação e gerei apenas uma estimativa preliminar. "
+                "Ela não é cotação oficial, então vou encaminhar seu atendimento para um especialista validar os dados e confirmar o valor com segurança."
             )
         if "indisponivel" in folded or "legado" in folded:
             return (
-                "Tentei consultar o sistema de cotacao, mas ele ficou indisponivel depois das tentativas automaticas. "
-                "Para nao te passar um valor inseguro, vou encaminhar seu atendimento para um especialista com todos os dados ja coletados."
+                "Tentei consultar o sistema de cotação, mas ele ficou indisponível depois das tentativas automáticas. "
+                "Para não te passar um valor inseguro, vou encaminhar seu atendimento para um especialista com todos os dados já coletados."
             )
         if "recusada" in folded:
             return (
-                "A regra da cotacao recusou esse perfil automaticamente. "
-                "Vou encaminhar para um especialista explicar o criterio e avaliar alternativas permitidas."
+                "A regra da cotação recusou esse perfil automaticamente. "
+                "Vou encaminhar para um especialista explicar o critério e avaliar alternativas permitidas."
             )
         if "midia" in folded:
             return (
-                "Recebi o anexo, mas neste canal eu ainda nao consigo analisar midia com seguranca. "
+                "Recebi o anexo, mas neste canal eu ainda não consigo analisar mídia com segurança. "
                 "Vou encaminhar para um especialista revisar o material e continuar o atendimento."
             )
         if "aceitou" in folded or "emissao" in folded:
             return (
-                "Perfeito. Vou encaminhar para um especialista finalizar a emissao com voce e confirmar os dados obrigatorios antes da proposta."
+                "Perfeito. Vou encaminhar para um especialista finalizar a emissão com você e confirmar os dados obrigatórios antes da proposta."
             )
         if "recusou" in folded:
             return (
-                "Sem problema. Vou registrar a decisao e encaminhar para um especialista avaliar se existe alguma alternativa melhor para o seu caso."
+                "Sem problema. Vou registrar a decisão e encaminhar para um especialista avaliar se existe alguma alternativa melhor para o seu caso."
             )
         return (
-            "Vou encaminhar para um especialista humano com o contexto que ja coletei. "
-            f"Motivo: {reason}. Assim evitamos travar seu atendimento ou passar uma cotacao insegura."
+            "Vou encaminhar para um especialista humano com o contexto que já coletei. "
+            f"Motivo: {reason}. Assim evitamos travar seu atendimento ou passar uma cotação insegura."
         )
 
     @staticmethod
     def _next_question(state: ConversationState, missing: list[str]) -> str:
         first = missing[0]
-        prefix = "Perfeito, ja anotei o que consegui. "
+        prefix = "Perfeito, já anotei o que consegui. "
         if first == "idade":
-            return prefix + "Para calcular corretamente, preciso so de mais um dado: qual e a idade do principal condutor?"
+            return prefix + "Para calcular corretamente, preciso só de mais um dado: qual é a idade do principal condutor?"
         if first == "ano do veiculo":
-            return prefix + "Qual e o modelo e ano do veiculo? Pode mandar como: Corolla 2020."
+            return prefix + "Qual é o modelo e ano do veículo? Pode mandar como: Corolla 2020."
         if first == "CEP":
-            return prefix + "Qual e o CEP onde o carro costuma dormir?"
+            return prefix + "Qual é o CEP onde o carro costuma dormir?"
         if first == "plano":
             return (
                 prefix
-                + "Voce prefere Essencial, Completo ou Premium? Se nao souber, posso seguir com o Completo como recomendacao equilibrada."
+                + "Você prefere Essencial, Completo ou Premium? Se não souber, posso seguir com o Completo como recomendação equilibrada."
             )
-        return prefix + f"Falta so: {first}."
+        return prefix + f"Falta só: {first}."
 
     @staticmethod
     def _safe_llm_reply_draft(reply: str | None) -> str | None:
@@ -300,17 +300,17 @@ class AutoSeguroAgent:
         carencia = quote.get("carencia") or {}
         pro_rata = quote.get("primeiro_pagamento_pro_rata")
         parts = [
-            f"Consegui cotar o plano {quote.get('plano_nome')} por R$ {quote.get('premio_mensal'):.2f}/mes.",
+            f"Consegui cotar o plano {quote.get('plano_nome')} por R$ {quote.get('premio_mensal'):.2f}/mês.",
             f"Franquia: R$ {quote.get('franquia')}.",
             "Coberturas: " + ", ".join(quote.get("coberturas") or []),
         ]
         if carencia.get("coberturas"):
             parts.append(
-                f"Roubo/furto tem carencia de {carencia.get('dias')} dias, conforme regra do plano."
+                f"Roubo/furto tem carência de {carencia.get('dias')} dias, conforme regra do plano."
             )
         if pro_rata:
             parts.append(
-                "Como a vigencia comeca no meio do mes, o primeiro pagamento fica proporcional: "
+                "Como a vigência começa no meio do mês, o primeiro pagamento fica proporcional: "
                 f"R$ {pro_rata.get('valor_primeiro_pagamento')}."
             )
         parts.append("Quer seguir com esse plano ou prefere falar com um especialista?")
@@ -346,6 +346,6 @@ class AutoSeguroAgent:
         if any(term in folded for term in ("caro", "franquia alta", "concorrente", "desconto")):
             return self._handoff(state, "lead trouxe negociacao ou objecao comercial apos cotacao")
         return (
-            "A cotacao ja esta pronta acima. Posso encaminhar para emissao ou chamar um "
-            "especialista para revisar com voce."
+            "A cotação já está pronta acima. Posso encaminhar para emissão ou chamar um "
+            "especialista para revisar com você."
         )

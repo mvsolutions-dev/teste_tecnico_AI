@@ -39,22 +39,22 @@ python scripts/smoke_delivery.py --limit 250
 
 ## Riscos detectados no baseline
 
-- O README original ainda apresentava primeiro o enunciado do desafio, e so depois a
-  solucao. Isso aumenta o tempo de entendimento do avaliador.
-- O campo `veiculo_texto` podia ficar poluido com trechos livres do lead em algumas
+- O README original ainda apresentava primeiro o enunciado do desafio, e só depois a
+  solução. Isso aumenta o tempo de entendimento do avaliador.
+- O campo `veiculo_texto` podia ficar poluído com trechos livres do lead em algumas
   mensagens.
 - A eval principal era in-process; faltava um smoke HTTP opcional para provar a
-  integracao real entre `agent-service` e `quote-service`.
-- A persistencia era apenas em memoria. Adequado ao take-home, mas sem demonstrar uma
-  ponte local simples para producao.
+  integração real entre `agent-service` e `quote-service`.
+- A persistência era apenas em memória. Adequado ao take-home, mas sem demonstrar uma
+  ponte local simples para produção.
 
-## Decisao
+## Decisão
 
 Aplicar melhorias incrementais sem trocar a arquitetura:
 
-- documentacao reviewer-first;
+- documentação reviewer-first;
 - smoke HTTP opcional;
 - SQLite opcional com payload redigido;
-- normalizacao de veiculo;
+- normalização de veículo;
 - flags opcionais de LLM judge no delivery smoke;
 - control tower com narrativa executiva.
